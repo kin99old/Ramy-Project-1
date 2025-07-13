@@ -62,10 +62,30 @@ async def upload_file(file: UploadFile = File(...), x_secret_key: str = Header(N
 def parse_html_content(html_content):
     clean_text = re.sub('<[^<]+?>', '', html_content)
     clean_text = ' '.join(clean_text.split())
-    period = "1 hour"
-    period_match = re.search(r'Daily Report (\d+) hours?', clean_text)
-    if period_match:
-        period = f"{period_match.group(1)} hours"
+    
+    # تحديد نوع التقرير
+    period = "Custom"
+    
+    # البحث عن نوع التقرير الجديد
+    if "REPORT (DAILY)" in clean_text:
+        period = "Daily"
+    elif "REPORT (WEEKLY)" in clean_text:
+        period = "Weekly"
+    elif "REPORT (MONTHLY)" in clean_text:
+        period = "Monthly"
+    else:
+        # إذا لم يكن من الأنواع الجديدة، نبحث عن عدد الساعات القديم
+        period_match = re.search(r'REPORT\s*\((\d+)\s*hours?\)', clean_text)
+        if period_match:
+            hours = int(period_match.group(1))
+            if hours == 24:
+                period = "Daily"
+            elif 120 <= hours <= 168:
+                period = "Weekly"
+            elif 480 <= hours <= 744:
+                period = "Monthly"
+            else:
+                period = f"{hours} hours"
 
     total_pips = 0.0
     trades = []
@@ -105,7 +125,14 @@ def generate_report_image(report_data):
     fig.patch.set_facecolor(bg_color)
     ax.set_facecolor(bg_color)
 
-    plt.text(0.5, 0.95, "Kin99old_copytrading Report", fontsize=24, fontweight='bold',
+    # تحديد عنوان التقرير بناءً على نوعه
+    report_title = {
+        'Daily': "Daily Trading Report",
+        'Weekly': "Weekly Trading Report",
+        'Monthly': "Monthly Trading Report"
+    }.get(report_data['period'], "Trading Report")
+
+    plt.text(0.5, 0.95, report_title, fontsize=24, fontweight='bold',
              color=accent_color, fontfamily='sans-serif', horizontalalignment='center', transform=ax.transAxes)
     plt.text(0.5, 0.5, "@kin99old", fontsize=120, color='#ffffff10',
              fontweight='bold', fontfamily='sans-serif', horizontalalignment='center',
