@@ -172,7 +172,7 @@ def generate_report_image(report_data):
     plt.text(0.5, 0.03, "© kin99old Report", fontsize=10, color='#9CA3AF', ha='center', transform=ax.transAxes)
 
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', dpi=400, bbox_inches='tight')
+    plt.savefig(buf, format='png', dpi=300, bbox_inches='tight')
     buf.seek(0)
     plt.close()
     return buf
